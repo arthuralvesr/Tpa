@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <stdlib.h>
 #include <string.h>
+#include <locale>
+
 
 //Matricula,CPF,Nome,Nota,Idade,Curso,Cidade
 //A0000000,915.216.859-08,Wallace Sampaio,20.35,23,Direito,Rio de Janeiro
@@ -81,46 +83,9 @@ bool iteraCpf(char *busca){
     return true;
 }
 
-bool iteraCpf(char *busca){
-    Aluno *aux = als.inicio;
-
-    if(busca == NULL){ // se teve falha no ler aluno
-        printf("Erro, linha não copiada!");
-        return false;
-    }
-
-    if (als.inicio == NULL) { // primeiro termo
-        return true;
-    }
-
-    while(aux != NULL) { // itera procurando dup
-
-        if(strcmp(busca, aux->cpf) == 0){
-            printf("CPF duplicado: %s\n" , busca);
-            return false;
-        }
-        aux = aux->prox;
-    }
-
-    return true;
-}
-
-Aluno *iteraNome(char *busca){
-    Aluno *aux = als.inicio;
-
-    while(true){
-
-        if(aux->nome > busca) {
-            aux = aux->prox;
-            return aux;
-        } else {
-            return aux->ante;
-        }
-    }
-}
 
 bool insere(Aluno *aLido){
-    Aluno *aux;
+    Aluno *aux = als.inicio;
 
     if(aLido == NULL) return false; // se leu errado
 
@@ -130,28 +95,50 @@ bool insere(Aluno *aLido){
         aLido->prox = NULL;
         aLido->ante = NULL;
 
+        als.quantidade++;
+        return true;
 
-    } else { // demais termos
-        
-        // ordem alfabetica
-        aux = iteraNome(aLido->nome);
-        // parei aqui no ordem alfabetica
-        // aux é o ponteiro pra onde preciso adicionar
-        
-        aLido->prox = NULL;
-        aLido->ante = als.fim;
     } 
-    
+
+    if (strcmp(aLido->nome, als.inicio->nome) < 0) { // começo
+        aLido->prox = als.inicio;
+        als.inicio->ante = aLido;
+        aLido->ante = NULL;
+        als.inicio = aLido;
+        als.quantidade++;
+        return true;
+    }
+
+    while (aux != NULL) { // meio 
+
+        if (strcmp(aux->nome, aLido->nome) > 0) {
+
+            aLido->ante = aux->ante;
+            aux->ante->prox = aLido;
+            aLido->prox = aux;
+            aux->ante = aLido;
+            als.quantidade++;
+            return true;
+        }
+        aux = aux->prox;
+    }
+
+    // fim
+    als.fim->prox = aLido;
+    aLido->ante = als.fim;
+    aLido->prox = NULL;
+    als.fim = aLido;
     als.quantidade++;
     return true;
 }
 
 Aluno *lerAluno(FILE *a) {
     Aluno *novoAl = new Aluno;
-    char linha[80];
+    char linha[256];
     char *sep;
     
-    if (fgets(linha, 80, a) == NULL) { 
+    
+    if (fgets(linha, 256, a) == NULL) { 
         return NULL; // final do arquivo
     }
     linha[strcspn(linha, "\n")] = '\0'; // procura o primeiro \n da string linha e troca por 0
@@ -193,7 +180,18 @@ Aluno *lerAluno(FILE *a) {
 
     sep = strtok(NULL, ",");
     strcpy(novoAl->nome, sep);
+
+    sep = strtok(NULL, ",");
+    novoAl->nota = atof(sep);
     
+    sep = strtok(NULL, ",");
+    novoAl->idade = atoi(sep);
+
+    sep = strtok(NULL, ",");
+    strcpy(novoAl->curso, sep);
+
+    sep = strtok(NULL, "\n");
+    strcpy(novoAl->cidade, sep);
 
     return novoAl;
 }
@@ -207,7 +205,11 @@ void listar(){
     while(aux != NULL) {
         printf("Matricula: %s\n" , aux->matricula);
         printf("CPF: %s\n" , aux->cpf);
-        printf("Nome: %s\n\n" , aux->nome);
+        printf("Nome: %s\n" , aux->nome);
+        printf("Nota: %.2f\n" , aux->nota);
+        printf("Idade: %d\n" , aux->idade);
+        printf("Curso: %s\n" , aux->curso);
+        printf("Cidade: %s\n\n" , aux->cidade);
         
         aux = aux->prox;
     }
@@ -228,47 +230,51 @@ void buscarMatricula(){
 
     printf("Insira o MATRICULA a ser buscado: ");
     scanf("%s" , matBuscado);
-    iteraCpf(matBuscado);
+    iteraMat(matBuscado);
 
     // continuar
 }
 
-void menu(){
-    int op;
+// void menu(){
+//     int op;
 
-    printf("\n\n======| MENU |======\n\n");
+//     printf("\n\n======| MENU |======\n\n");
 
-    printf("1 - Buscar por Matricula\n");
-    printf("2 - Buscar por CPF\n");
-    printf("3 - Listar\n");
-    printf("0 - Sair\n");
+//     printf("1 - Buscar por Matricula\n");
+//     printf("2 - Buscar por CPF\n");
+//     printf("3 - Listar\n");
+//     printf("0 - Sair\n");
     
-    printf("Insira uma opção: ");
-    scanf("%d" , &op);
+//     printf("Insira uma opção: ");
+//     scanf("%d" , &op);
 
-    switch (op) {
-    case 1:
-        buscarMatricula();
-        break;
-    case 2:
-        buscarCpf();
-        break;
-    case 3:
-        listar();
-        break;    
-    default:
-        break;
-    }
-}
+//     switch (op) {
+//     case 1:
+//         buscarMatricula();
+//         break;
+//     case 2:
+//         buscarCpf();
+//         break;
+//     case 3:
+//         listar();
+//         break;    
+//     default:
+//         break;
+//     }
+// }
 
 int main() {
     inicializa();
     FILE *arq = fopen("../teste.csv", "r");
+    int cont = 0;
 
     if(arq == NULL){
         printf("Erro!");
         return 1;
     }
+
+    char cabecalho[256];
+    fgets(cabecalho, sizeof(cabecalho), arq);
 
     while (true){ 
         Aluno *alunoLido = lerAluno(arq);
@@ -280,17 +286,20 @@ int main() {
             } else {
                 continue;
             }
-        }
+        }        
 
         insere(alunoLido);
+        cont++;
+
+        if (cont == 10) {
+            break;
+        }
     }
     
 
-    // listar();
-    menu(){
-
-    }
-
+    listar();
+    // menu();
+    fclose(arq);
     system("pause");
     return 0;
 }
