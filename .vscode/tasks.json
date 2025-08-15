@@ -1,0 +1,19 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "compilar",
+        "type": "shell",
+        "command": "g++",
+        "args": [
+          "-g",
+          "IntroducaoHash.cpp",
+          "-o",
+          "IntroducaoHash.exe"
+        ],
+        "group": "build",
+        "problemMatcher": []
+      }
+    ]
+  }
+  
