@@ -5,14 +5,14 @@
         "name": "Executar C++",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/IntroducaoHash.exe",
+        "program": "C:/Users/arthu/OneDrive/Área de Trabalho/Tpa/IntroducaoHash.exe",
         "args": [],
         "stopAtEntry": false,
-        "cwd": "${workspaceFolder}",
+        "cwd": "C:/Users/arthu/OneDrive/Área de Trabalho/Tpa",
         "environment": [],
         "externalConsole": true,
         "MIMode": "gdb",
-        "miDebuggerPath": "c:/Program Files (x86)/Falcon/MinGW/bin/gdb.exe",
+        "miDebuggerPath": "c:/MinGW/bin/gdb.exe",
         "preLaunchTask": "compilar"
       }
     ]

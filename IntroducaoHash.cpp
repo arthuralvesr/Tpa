@@ -38,48 +38,27 @@ void inicializaHash(){
     }
 }
 
-bool iteraMat(char *busca){
-    Aluno *aux = als[0].inicio;
-
-    if(busca == NULL){ // se teve falha no ler aluno
+bool procDup(char *mat, char *cpf){
+    
+    if(mat == NULL || cpf == NULL){ // se teve falha no ler aluno
         printf("Erro, linha não copiada!");
         return false;
     }
-
-    for(int i = 0; i = 100; i++){
+    
+    
+    for(int i = 1; i < 100; i++){
+        Aluno *aux = als[i].inicio;
+        
         while(aux != NULL) { // itera procurando dup
             
-            if(strcmp(busca, aux->matricula) == 0){
-                printf("Matricula duplicada: %s\n" , busca);
-                return false;
-            }
-            aux = aux->prox;
-        }
-    }
-
-    return true;
-}
-
-bool iteraCpf(char *busca){
-    Aluno *aux = als[0].inicio;
-
-    if(busca == NULL){ // se teve falha no ler aluno
-        printf("Erro, linha não copiada!");
-        return false;
-    }
-
-    for(int i = 0; i = 100; i++) {
-        aux = als[i].inicio;
-
-        while(aux != NULL) { // itera procurando dup
-
-            if(strcmp(busca, aux->cpf) == 0){
-                printf("CPF duplicado: %s\n" , busca);
+            if((strcmp(mat, aux->matricula) == 0) || (strcmp(cpf, aux->cpf) == 0)){
+                printf("Duplicada");
                 return false;
             }
 
             aux = aux->prox;
         }
+
     }
 
     return true;
@@ -98,7 +77,6 @@ bool insere(Aluno *aLido, int hash){
 
         als[hash].quantidade++;
         return true;
-
     } 
 
     if (strcmp(aLido->nome, als[hash].inicio->nome) < 0) { // começo
@@ -106,6 +84,7 @@ bool insere(Aluno *aLido, int hash){
         als[hash].inicio->ante = aLido;
         aLido->ante = NULL;
         als[hash].inicio = aLido;
+
         als[hash].quantidade++;
         return true;
     }
@@ -118,9 +97,11 @@ bool insere(Aluno *aLido, int hash){
             aux->ante->prox = aLido;
             aLido->prox = aux;
             aux->ante = aLido;
+
             als[hash].quantidade++;
             return true;
         }
+
         aux = aux->prox;
     }
 
@@ -129,13 +110,13 @@ bool insere(Aluno *aLido, int hash){
     aLido->ante = als[hash].fim;
     aLido->prox = NULL;
     als[hash].fim = aLido;
+
     als[hash].quantidade++;
     return true;
 }
 
 int pegarHash(char *cpf){
     char *hash = strrchr(cpf, '-');
-    int teste;
 
     if (hash != NULL) {
         return atoi(hash + 1);
@@ -153,42 +134,20 @@ Aluno *lerAluno(FILE *a) {
     }
     linha[strcspn(linha, "\n")] = '\0'; // procura o primeiro \n da string linha e troca por 0
     
-    sep = strtok(linha, ",");
-
     // leitura matricula
-    if(sep == NULL) { // se der erro na leitura do arq
-        printf("Erro na leitura da matricula\n");
-        delete novoAl;
-        return NULL;
-    }
-
-    //  verificação mat
-    if (iteraMat(sep) == true) { // verificação de duplicada da matricula
-        strcpy(novoAl->matricula, sep);
-    } else {
-
-        delete novoAl;
-        return NULL;
-    }
+    sep = strtok(linha, ",");
+    strcpy(novoAl->matricula, sep);
 
     // leitura cpf
     sep = strtok(NULL, ",");
-    if(sep == NULL) { // erro na leitura do arquivo
-        printf("Erro na leitura do CPF\n");
-        delete novoAl;
-        return NULL;
-    }
-
-    // verificação cpf
-    if (iteraCpf(sep) == true){
-
-        strcpy(novoAl->cpf, sep);
-    } else {
-
-        delete novoAl;
-        return NULL;
-    }
+    strcpy(novoAl->cpf, sep);
     
+    if (procDup(novoAl->matricula, novoAl->cpf) == false){
+
+        delete novoAl;
+        return NULL;
+    }
+
     // nome 
     sep = strtok(NULL, ",");
     strcpy(novoAl->nome, sep);
@@ -209,11 +168,12 @@ Aluno *lerAluno(FILE *a) {
 }
 
 void listar(){
-    Aluno *aux = als[0].inicio;
-
+    
     printf("\n\n======| LISTAGEM |======\n\n");
+    
+    for(int i = 0; i < 100; i++){
+        Aluno *aux = als[i].inicio;
 
-    for(int i = 0; i = 100; i++){
         while(aux != NULL) {
             printf("Matricula: %s\n" , aux->matricula);
             printf("CPF: %s\n" , aux->cpf);
@@ -230,7 +190,7 @@ void listar(){
 
 int main() {
     inicializaHash();
-    FILE *arq = fopen("alunos_completos.csv", "r");
+    FILE *arq = fopen("../alunos_completos.csv", "r");
     int cont = 0;
 
     if(arq == NULL){
@@ -254,13 +214,13 @@ int main() {
                 continue;
             }
         }  
-
+        
         int hash = pegarHash(alunoLido->cpf);  
 
         insere(alunoLido, hash);
         cont++;
 
-        if (cont == 2) {
+        if (cont == 100) {
             break;
         }
     }
