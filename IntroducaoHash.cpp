@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <locale>
+#include <ctime>
 
 
 //Matricula,CPF,Nome,Nota,Idade,Curso,Cidade
@@ -38,27 +39,22 @@ void inicializaHash(){
     }
 }
 
-bool procDup(char *mat, char *cpf){
+bool procDup(char *cpf, int hash){
+    Aluno *aux = als[hash].inicio;
     
-    if(mat == NULL || cpf == NULL){ // se teve falha no ler aluno
+    if(cpf == NULL){ // se teve falha no ler aluno
         printf("Erro, linha não copiada!");
         return false;
     }
-    
-    
-    for(int i = 1; i < 100; i++){
-        Aluno *aux = als[i].inicio;
-        
-        while(aux != NULL) { // itera procurando dup
             
-            if((strcmp(mat, aux->matricula) == 0) || (strcmp(cpf, aux->cpf) == 0)){
-                printf("Duplicada");
-                return false;
-            }
-
-            aux = aux->prox;
+    while(aux != NULL) { // itera procurando dup
+            
+        if(strcmp(aux->cpf, cpf) == 0){
+            printf("Duplicado\n");
+            return false;
         }
 
+        aux = aux->prox;
     }
 
     return true;
@@ -119,8 +115,10 @@ int pegarHash(char *cpf){
     char *hash = strrchr(cpf, '-');
 
     if (hash != NULL) {
-        return atoi(hash + 1);
+        return atoi(hash + 1) % 100;
     }
+    
+    return 0;
 }
 
 Aluno *lerAluno(FILE *a) {
@@ -137,17 +135,20 @@ Aluno *lerAluno(FILE *a) {
     // leitura matricula
     sep = strtok(linha, ",");
     strcpy(novoAl->matricula, sep);
-
+    
+    
     // leitura cpf
     sep = strtok(NULL, ",");
     strcpy(novoAl->cpf, sep);
     
-    if (procDup(novoAl->matricula, novoAl->cpf) == false){
+    int hash = pegarHash(novoAl->cpf);  
+
+    if (procDup(novoAl->cpf, hash) == false){
 
         delete novoAl;
         return NULL;
     }
-
+    
     // nome 
     sep = strtok(NULL, ",");
     strcpy(novoAl->nome, sep);
@@ -193,6 +194,9 @@ int main() {
     FILE *arq = fopen("../alunos_completos.csv", "r");
     int cont = 0;
 
+    time_t inicio, fim;
+    inicio = time(NULL);
+
     if(arq == NULL){
         printf("Erro!");
         return 1;
@@ -208,7 +212,6 @@ int main() {
         if (alunoLido == NULL) {
             
             if (feof(arq)){
-                printf("teste");
                 break;
             } else {
                 continue;
@@ -216,19 +219,24 @@ int main() {
         }  
         
         int hash = pegarHash(alunoLido->cpf);  
-
         insere(alunoLido, hash);
         cont++;
 
-        if (cont == 100) {
+        if (cont == 1000009) {
             break;
         }
     }
     
 
-    listar();
+    // listar();
     // menu();
     fclose(arq);
+
+    fim = time(NULL);
+    time_t tempo;
+    tempo = fim - inicio;
+    printf("Leitura: %d segs\n" , (int)tempo);
+
     system("pause");
     return 0;
 }
