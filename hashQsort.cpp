@@ -4,8 +4,11 @@
 #include <string.h>
 #include <locale>
 #include <ctime>
+#include <iostream>
 
-#define TAM 100
+using namespace std;
+
+#define TAM 1000
 
 //Matricula,CPF,Nome,Nota,Idade,Curso,Cidade
 //A0000000,915.216.859-08,Wallace Sampaio,20.35,23,Direito,Rio de Janeiro
@@ -64,6 +67,7 @@ bool procDup(char *cpf, int hash){
 bool insere(Aluno *aLido, int hash){
     Aluno *aux = als[hash].inicio;
 
+    
     if(aLido == NULL) return false; // se leu errado
 
     if(als[hash].quantidade == 0){ // lista vazia
@@ -112,14 +116,18 @@ bool insere(Aluno *aLido, int hash){
     return true;
 }
 
-int pegarHash(char *cpf){
-    char *hash = strrchr(cpf, '-');
+int pegarHash(char *cpf) {
+    if (strlen(cpf) != 14) return 0;
 
-    if (hash != NULL) {
-        return atoi(hash + 1) % 100;
-    }
-    
-    return 0;
+    char ultimos[5];
+
+    ultimos[0] = cpf[9];   
+    ultimos[1] = cpf[10];  
+    ultimos[2] = cpf[12];  
+    ultimos[3] = cpf[13]; 
+    ultimos[4] = '\0';
+  
+    return atoi(ultimos);
 }
 
 Aluno *lerAluno(FILE *a) {
@@ -210,6 +218,8 @@ int main() {
     while (true){ 
         Aluno *alunoLido = lerAluno(arq);
 
+        cout << "teste" << endl;
+
         if (alunoLido == NULL) {
             
             if (feof(arq)){
@@ -218,18 +228,17 @@ int main() {
                 continue;
             }
         }  
-        
         int hash = pegarHash(alunoLido->cpf);  
         insere(alunoLido, hash);
         cont++;
 
-        if (cont == 1000009) {
+        if (cont == 1) {
             break;
         }
     }
     
 
-    // listar();
+    listar();
     // menu();
     fclose(arq);
 
