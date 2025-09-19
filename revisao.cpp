@@ -265,7 +265,7 @@ void buscarMatricula(){
 
 int main() {
     inicializa();
-    FILE *arq = fopen("../teste.csv", "r");
+    FILE *arq = fopen("alunos_completos.csv", "r");
     int cont = 0;
 
     if(arq == NULL){

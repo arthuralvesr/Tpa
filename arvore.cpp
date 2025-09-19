@@ -6,6 +6,8 @@
 #include <ctime>
 #include <iostream>
 
+using namespace std;
+
 struct Aluno{
     char matricula[9];
     char cpf[15];
@@ -26,21 +28,34 @@ struct Alunos{
 
 Alunos als;
 
+void inicializar(Aluno **raiz) {
+    *raiz = NULL;
+}
 
-bool insere(Aluno *aLido, Aluno *raiz){
+void insere(Aluno *aLido, Aluno **raiz){
 
-    if (raiz == NULL){
-        raiz = aLido;
+    if (*raiz == NULL){
         aLido->esq = NULL;
         aLido->dir = NULL;
-
+        
+        *raiz = aLido;
+        
     } else { 
-        if (strcmp(aLido->nome, raiz->nome) < 0) {
-            insere(aLido, raiz->esq);
+        if (strcmp(aLido->nome, (*raiz)->nome) < 0) {
+            insere(aLido, &((*raiz)->esq));
         } else {
-            insere(aLido, raiz->dir);
+            insere(aLido, &((*raiz)->dir));
         }
     }
+}
+
+void listar(Aluno *raiz){
+
+    if(raiz != NULL) {
+        cout << "nome: " << raiz->nome << "\n";
+        listar(raiz->esq);
+        listar(raiz->dir);
+    } 
 }
 
 Aluno *lerAluno(FILE *a) {
@@ -79,17 +94,19 @@ Aluno *lerAluno(FILE *a) {
 }
 
 int main() {
-    Aluno *raiz = als.head;
-    FILE *arq = fopen("../alunos_completos.csv", "r");
+    Aluno *raiz;
+    FILE *arq = fopen("alunos_completos.csv", "r");
     int cont = 0;
 
     if(arq == NULL){
         printf("Erro!");
         return 1;
     }
-
+    
     char cabecalho[256];
     fgets(cabecalho, sizeof(cabecalho), arq);
+
+    inicializar(&raiz);
 
     while (true){ 
         Aluno *alunoLido = lerAluno(arq);
@@ -103,7 +120,7 @@ int main() {
             }
         }        
 
-        insere(alunoLido, raiz);
+        insere(alunoLido, &raiz);
         cont++;
 
         if (cont == 10) {
@@ -111,9 +128,7 @@ int main() {
         }
     }
     
-    // menu();
+    listar(raiz);
     fclose(arq);
-    system("pause");
     return 0;
 }
-

@@ -1,19 +1,17 @@
 {
     "version": "0.2.0",
     "configurations": [
-      {
-        "name": "Executar C++",
-        "type": "cppdbg",
-        "request": "launch",
-        "program": "C:/Users/arthu/OneDrive/Área de Trabalho/Tpa/IntroducaoHash.exe",
-        "args": [],
-        "stopAtEntry": false,
-        "cwd": "C:/Users/arthu/OneDrive/Área de Trabalho/Tpa",
-        "environment": [],
-        "externalConsole": true,
-        "MIMode": "gdb",
-        "miDebuggerPath": "c:/MinGW/bin/gdb.exe",
-        "preLaunchTask": "compilar"
-      }
+        {
+            "name": "C++ Launch (Linux)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
     ]
-  }
+}
