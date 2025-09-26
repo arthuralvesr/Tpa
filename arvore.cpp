@@ -28,25 +28,35 @@ struct Alunos{
 
 Alunos als;
 
-void inicializar(Aluno **raiz) {
-    *raiz = NULL;
+void inicializar() {
+    als.head = NULL;
 }
 
-void insere(Aluno *aLido, Aluno **raiz){
+void insere(Aluno *aLido){
 
-    if (*raiz == NULL){
-        aLido->esq = NULL;
-        aLido->dir = NULL;
+    if (als.head == NULL){
+        als.head = aLido;
         
-        *raiz = aLido;
-        
-    } else { 
-        if (strcmp(aLido->nome, (*raiz)->nome) < 0) {
-            insere(aLido, &((*raiz)->esq));
+    } 
+    Aluno *atual = als.head;
+    Aluno *pai = NULL;
+    
+    while (atual != NULL) {
+        pai = atual;
+
+        if (strcmp(aLido->nome, atual->nome) < 0) {
+            atual = atual->esq;
         } else {
-            insere(aLido, &((*raiz)->dir));
+            atual = atual->dir;
         }
     }
+
+    if (strcmp(aLido->nome, pai->nome) < 0) {
+        pai->esq = aLido;
+    } else {
+        pai->dir = aLido;
+    }
+    
 }
 
 void listar(Aluno *raiz){
@@ -94,7 +104,6 @@ Aluno *lerAluno(FILE *a) {
 }
 
 int main() {
-    Aluno *raiz;
     FILE *arq = fopen("alunos_completos.csv", "r");
     int cont = 0;
 
@@ -106,7 +115,7 @@ int main() {
     char cabecalho[256];
     fgets(cabecalho, sizeof(cabecalho), arq);
 
-    inicializar(&raiz);
+    inicializar();
 
     while (true){ 
         Aluno *alunoLido = lerAluno(arq);
@@ -120,7 +129,7 @@ int main() {
             }
         }        
 
-        insere(alunoLido, &raiz);
+        insere(alunoLido);
         cont++;
 
         if (cont == 10) {
@@ -128,7 +137,7 @@ int main() {
         }
     }
     
-    listar(raiz);
+    listar(als.head);
     fclose(arq);
     return 0;
 }

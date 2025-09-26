@@ -4,6 +4,12 @@
 #include <cstdlib>
 #include <ctime>
 #include <string.h>
+#include <math.h>
+#include <iostream>
+
+
+using namespace std;
+
 
 //Exemplo do arquivo CSV que será lido
 //Matricula,CPF,Nome,Nota,Idade,Curso,Cidade
@@ -25,6 +31,7 @@ struct Aluno{
 struct Alunos{
     Aluno **hash;
     bool *hashOcupada;
+    bool *hashRemovido;
     int tamanhoAtual;
     int quantidade;
 };
@@ -36,21 +43,133 @@ void inicializa(){
     a.quantidade = 0;
     a.hash = new Aluno*[a.tamanhoAtual];
     a.hashOcupada = new bool[a.tamanhoAtual];
+    a.hashRemovido = new bool[a.tamanhoAtual];
 
     for (int i=0; i<a.tamanhoAtual; i++){
         a.hashOcupada[i] = false;
+        a.hashRemovido[i] = false;
+    }
+
+}
+
+void inicializaExpandido(Alunos *hashExp, int tam){
+    
+    hashExp->tamanhoAtual = tam;
+    hashExp->quantidade = 0;
+    hashExp->hash = new Aluno*[tam];
+    hashExp->hashOcupada = new bool[tam];
+    hashExp->hashRemovido = new bool[tam];
+
+    for (int i = 0; i < hashExp->tamanhoAtual; i++){
+        hashExp->hashOcupada[i] = false;
+        hashExp->hashRemovido[i] = false;
     }
 }
 
-void expandirHash(){
-    /*
-    tem que criar dois novos vetores de aluno e bool temporario
-    com tamanhos maiores
-    depois copio do vetor antigo para o novo
-    e depois deleto o vetor antigo
-    depois aponto o vetor novo para a.hash
+int primo(int n) {
+    if (n & 1)
+        n -= 2;
+    else
+        n--;
+
+    int i, j;
+    for (i = n; i >= 2; i -= 2) {
+        if (i % 2 == 0)
+            continue;
+        for (j = 3; j <= sqrt(i); j += 2) {
+            if (i % j == 0)
+                break;
+        }
+        if (j > sqrt(i))
+            return i;
+    }
+
+    return 2;
+}
+
+void expandirHash() {
+    int tamNovo = primo(a.tamanhoAtual * 2);
+
+    Alunos *hashExpandida = new Alunos; 
+    inicializaExpandido(hashExpandida, tamNovo); 
+
+    for (int i = 0; i < a.tamanhoAtual; i++) {
+        if(a.hashOcupada[i] == true) {
+            inserirExpandido(hashExpandida, i);
+        }
+    }
+
+    delete[] a.hash;
+    delete[] a.hashOcupada;
+    delete[] a.hashRemovido;
+
+    a.hash = hashExpandida->hash;
+    a.hashOcupada = hashExpandida->hashOcupada;
+    a.hashRemovido = hashExpandida->hashRemovido;
+}
+
+int calculoHash(int calcHash) {
+    return (calcHash * calcHash * calcHash) % a.tamanhoAtual;
+}
+
+int calculoReHash(int calcReHash) {
+    return 1 + (calcReHash % (a.tamanhoAtual - 1));
+}
+
+
+void inserir(Aluno *aLido){
+    if ((a.quantidade / a.tamanhoAtual) > CARGA_MAXIMA) {
+        expandirHash();
+    }
+
+    int soma = 0;
+    for (char c : aLido->nome) {
+        soma += static_cast<int>(c); // converte o char para inteiro (valor ASCII)
+    }
+    int calc = calculoHash(soma);
+    int calc2 = -1;
     
-    */
+    while (a.hashOcupada[calc]) {
+        if(strcmp(aLido->nome, a.hash[calc]->nome) == 0) {
+            printf("Nomes repetidos");
+            return;
+        }
+
+        if (calc2 == -1) {
+            calc2 = calculoReHash(calc);
+        }
+
+        calc = (calc + calc2) % a.tamanhoAtual; 
+    }
+
+    a.hash[calc] = aLido;
+    a.quantidade++;
+    a.hashOcupada[calc] = true;
+    a.hashRemovido[calc] = false;
+    
+}
+
+void inserirExpandido(Alunos *hashExp, int i) {
+    
+    int soma = 0;
+    for (char c : a.hash[i]->nome) {
+        soma += static_cast<int>(c); // converte o char para inteiro (valor ASCII)
+    }
+    int calc = calculoHash(soma);
+    int calc2 = -1;
+    
+    while (hashExp->hashOcupada[calc]) {
+        if (calc2 == -1) {
+            calc2 = calculoReHash(calc);
+        }
+
+        calc = (calc + calc2) % a.tamanhoAtual; 
+    }
+
+    hashExp->hash[calc] = a.hash[i];
+    hashExp->quantidade++;
+    hashExp->hashOcupada[calc] = true;
+    hashExp->hashRemovido[calc] = false;
 }
 
 // Função para ler arquivo CSV
@@ -74,20 +193,12 @@ void lerArquivoCSV(const char* nomeArquivo) {
     // Ler cada linha usando fscanf diretamente na struct
     Aluno* novo;
     while ((novo = new Aluno) != NULL) {
-        //%N significa que fará a leitura de até N caracteres, evitando overflow
-        //O [^caractere] é uma classe de caracteres negativa - significa "qualquer caractere EXCETO o especificado".
-        //É muito útil para parar a leitura quando encontrar um delimitador específico (como vírgula ou quebra de linha).
+
         if (fscanf(arquivo, "%8[^,],%14[^,],%39[^,],%lf,%d,%39[^,],%39[^\n]\n", 
-                   novo->matricula, novo->cpf, novo->nome, &novo->nota, &novo->idade, novo->curso, novo->cidade) == 7) {
+            novo->matricula, novo->cpf, novo->nome, &novo->nota, &novo->idade, novo->curso, novo->cidade) == 7) {
             
-            // Inicializar ponteiros da lista
-            novo->prox = NULL;
-            novo->ante = NULL;
             //pega o endereço que deve ser inserido no vetor de alunos
-            adicionarAluno(0,novo);
-            //printf("Aluno adicionado: %s - %s\n", novo->matricula, novo->nome);
-            // Consumir a quebra de linha restante
-            //fgetc(arquivo);
+            inserir(novo);
         } else {
             // Se não conseguiu ler todos os campos, liberar memória e sair
             delete novo;
@@ -96,62 +207,75 @@ void lerArquivoCSV(const char* nomeArquivo) {
     }
     
     fclose(arquivo);
-    printf("Leitura concluida. Total de alunos: %d\n", a[0].quantidade);
+    // printf("Leitura concluida. Total de alunos: %d\n", a[0].quantidade);
 }
 
-// Função para exibir todos os alunos
 void exibirAlunos() {
     printf("\n=== LISTA DE ALUNOS ===\n");
-    Aluno* atual = a[0].inicio;
-    int contador = 1;
     
-    while (atual != NULL) {
-        printf("Aluno %d:\n", contador);
-        printf("  Matricula: %s\n", atual->matricula);
-        printf("  CPF: %s\n", atual->cpf);
-        printf("  Nome: %s\n", atual->nome);
-        printf("  Nota: %.2f\n", atual->nota);
-        printf("  Idade: %d\n", atual->idade);
-        printf("  Curso: %s\n", atual->curso);
-        printf("  Cidade: %s\n", atual->cidade);
-        printf("  ---\n");
+    for (int i = 0; i < a.tamanhoAtual; i++) {
+        if(a.hashOcupada[i]) {
+            printf ("  Matricula: %s\n", a.hash[i]->matricula);
+            printf ("  CPF: %s\n", a.hash[i]->cpf);
+            printf ("  Nome: %s\n", a.hash[i]->nome);
+            printf ("  Nota: %.2f\n", a.hash[i]->nota);
+            printf ("  Idade: %d\n", a.hash[i]->idade);
+            printf ("  Curso: %s\n", a.hash[i]->curso);
+            printf ("  Cidade: %s\n", a.hash[i]->cidade);
+            printf ("  ---\n");
+        }  
         
-        atual = atual->prox;
-        contador++;
     }
-    printf("Total: %d alunos\n\n", a[0].quantidade);
+    printf("Total: %d alunos\n\n", a.quantidade);
 }
 
-int calculoHash(char* nome){
-    return (1548)
+void buscar() {
+    char nome[40];
+
+    cout << "Digite o nome do aluno a ser buscado: ";
+    scanf(" %39[^\n]", nome);
+
+    // Calcula soma ASCII
+    int soma = 0;
+    for (int i = 0; nome[i] != '\0'; i++) {
+        soma += static_cast<int>(nome[i]);
+    }
+
+    int calc = calculoHash(soma);
+    int passoRehash = calculoReHash(calc);
+
+    int tentativas = 0;
+    bool encontrado = false;
+
+    while ((a.hashOcupada[calc] || a.hashRemovido[calc]) && tentativas < a.tamanhoAtual) {
+        if (a.hashOcupada[calc] && strcmp(a.hash[calc]->nome, nome) == 0) {
+            cout << "Aluno encontrado: " << a.hash[calc]->nome << endl;
+            encontrado = true;
+            break;
+        }
+        calc = (calc + passoRehash) % a.tamanhoAtual;
+        tentativas++;
+    }
+
+    if (!encontrado) {
+        cout << "Aluno nao encontrado." << endl;
+    }
 }
 
-int main(){
+
+int main() {
+    clock_t inicio, fim;
+
     inicializa();
+
     printf("=== SISTEMA DE LEITURA DE ALUNOS CSV ===\n\n");
-    //.....
-    Aluno* alunoTemp;
-    ///
-    alunoTemp = new Aluno;
-    //...ja li o aluno.. e salvei no alunoTemp (aqui teve um new)
-    a.hash[1548] = alunoTemp;
 
-
-
-    time_t inicio, fim;
     inicio = clock();
-    // Ler arquivo CSV (você pode alterar o nome do arquivo) Essa função já cria a lista dinâmica com os alunos
-    lerArquivoCSV("alunos.csv");
+    lerArquivoCSV("alunos_completos.csv");
     fim = clock();
-    //se eu quiser pegar como inteiro o valor do tempo
 
-    printf("Tempo de leitura: %d milissegundos\n", (int)fim - inicio);
-    //se eu quiser pegar como double o valor do tempo
-    // double tempo2 = difftime(fim, inicio);
-    // printf("Tempo de leitura: %.2f segundos\n", tempo2);
-    // Exibir todos os alunos carregados
-    //exibirAlunos();
-    
-    system("pause");
+    printf("Tempo de leitura: %d milissegundos\n", (int)(fim - inicio));
+
+    exibirAlunos();
     return 0;
 }
