@@ -87,6 +87,38 @@ int primo(int n) {
     return 2;
 }
 
+int calculoHash(int calcHash) {
+    return (calcHash * calcHash * calcHash) % a.tamanhoAtual;
+}
+
+int calculoReHash(int calcReHash) {
+    return 1 + (calcReHash % (a.tamanhoAtual - 1));
+}
+
+void inserirExpandido(Alunos *hashExp, int i) {
+    
+    int soma = 0;
+    for (char c : a.hash[i]->nome) {
+        soma += static_cast<int>(c); // converte o char para inteiro (valor ASCII)
+    }
+    int calc = calculoHash(soma);
+    int calc2 = -1;
+    
+    while (hashExp->hashOcupada[calc]) {
+        if (calc2 == -1) {
+            calc2 = calculoReHash(calc);
+        }
+
+        calc = (calc + calc2) % a.tamanhoAtual; 
+    }
+
+    hashExp->hash[calc] = a.hash[i];
+    hashExp->quantidade++;
+    hashExp->hashOcupada[calc] = true;
+    hashExp->hashRemovido[calc] = false;
+}
+
+
 void expandirHash() {
     int tamNovo = primo(a.tamanhoAtual * 2);
 
@@ -107,15 +139,6 @@ void expandirHash() {
     a.hashOcupada = hashExpandida->hashOcupada;
     a.hashRemovido = hashExpandida->hashRemovido;
 }
-
-int calculoHash(int calcHash) {
-    return (calcHash * calcHash * calcHash) % a.tamanhoAtual;
-}
-
-int calculoReHash(int calcReHash) {
-    return 1 + (calcReHash % (a.tamanhoAtual - 1));
-}
-
 
 void inserir(Aluno *aLido){
     if ((a.quantidade / a.tamanhoAtual) > CARGA_MAXIMA) {
@@ -147,29 +170,6 @@ void inserir(Aluno *aLido){
     a.hashOcupada[calc] = true;
     a.hashRemovido[calc] = false;
     
-}
-
-void inserirExpandido(Alunos *hashExp, int i) {
-    
-    int soma = 0;
-    for (char c : a.hash[i]->nome) {
-        soma += static_cast<int>(c); // converte o char para inteiro (valor ASCII)
-    }
-    int calc = calculoHash(soma);
-    int calc2 = -1;
-    
-    while (hashExp->hashOcupada[calc]) {
-        if (calc2 == -1) {
-            calc2 = calculoReHash(calc);
-        }
-
-        calc = (calc + calc2) % a.tamanhoAtual; 
-    }
-
-    hashExp->hash[calc] = a.hash[i];
-    hashExp->quantidade++;
-    hashExp->hashOcupada[calc] = true;
-    hashExp->hashRemovido[calc] = false;
 }
 
 // Função para ler arquivo CSV

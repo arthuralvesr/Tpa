@@ -43,27 +43,6 @@ void inicializaHash(){
     }
 }
 
-bool procDup(char *cpf, int hash){
-    Aluno *aux = als[hash].inicio;
-    
-    if(cpf == NULL){ // se teve falha no ler aluno
-        printf("Erro, linha não copiada!");
-        return false;
-    }
-            
-    while(aux != NULL) { // itera procurando dup
-            
-        if(strcmp(aux->cpf, cpf) == 0){
-            printf("Duplicado\n");
-            return false;
-        }
-
-        aux = aux->prox;
-    }
-
-    return true;
-}
-
 bool insere(Aluno *aLido, int hash){
     Aluno *aux = als[hash].inicio;
 
@@ -80,33 +59,7 @@ bool insere(Aluno *aLido, int hash){
         return true;
     } 
 
-    if (strcmp(aLido->nome, als[hash].inicio->nome) < 0) { // começo
-        aLido->prox = als[hash].inicio;
-        als[hash].inicio->ante = aLido;
-        aLido->ante = NULL;
-        als[hash].inicio = aLido;
-
-        als[hash].quantidade++;
-        return true;
-    }
-
-    while (aux != NULL) { // meio 
-
-        if (strcmp(aux->nome, aLido->nome) > 0) {
-
-            aLido->ante = aux->ante;
-            aux->ante->prox = aLido;
-            aLido->prox = aux;
-            aux->ante = aLido;
-
-            als[hash].quantidade++;
-            return true;
-        }
-
-        aux = aux->prox;
-    }
-
-    // fim
+    // so insere no fim, organiza dps
     als[hash].fim->prox = aLido;
     aLido->ante = als[hash].fim;
     aLido->prox = NULL;
@@ -114,6 +67,48 @@ bool insere(Aluno *aLido, int hash){
 
     als[hash].quantidade++;
     return true;
+}
+
+int compara(const void* a, const void* b) {
+    //comparar os dois nomes..
+    Aluno **a1;
+    Aluno **a2;
+    a1 = (Aluno**)a;
+    a2 = (Aluno**)b;
+    int retorno = strcmp((*a1)->nome, (*a2)->nome);
+    return retorno;
+}
+
+
+void ordena(int im){
+    Aluno **v;
+    Aluno *atual = als[im].inicio;
+    v = new Aluno*[als[im].quantidade];
+
+    printf("quantidade: %d\n",als[im].quantidade);
+
+    for(int i=0; i < als[im].quantidade; i++){
+        v[i] = atual;
+        atual = atual->prox;
+    }
+
+    qsort(v,als[im].quantidade,sizeof(Aluno*),compara);
+
+    als[im].inicio = v[0];
+    als[im].inicio->ante = NULL;
+    als[im].inicio->prox = v[1];
+    atual = v[1];
+
+    for(int i=1; i < als[im].quantidade-1; i++){
+        atual->prox = v[i+1];
+        atual->ante = v[i-1];
+        atual = atual->prox;
+
+    }
+
+    als[im].fim = v[als[0].quantidade-1];
+    als[im].fim->prox = NULL;
+    als[im].fim->ante = v[als[0].quantidade-2];
 }
 
 int pegarHash(char *cpf) {
@@ -145,19 +140,10 @@ Aluno *lerAluno(FILE *a) {
     sep = strtok(linha, ",");
     strcpy(novoAl->matricula, sep);
     
-    
     // leitura cpf
     sep = strtok(NULL, ",");
     strcpy(novoAl->cpf, sep);
-    
-    int hash = pegarHash(novoAl->cpf);  
 
-    if (procDup(novoAl->cpf, hash) == false){
-
-        delete novoAl;
-        return NULL;
-    }
-    
     // nome 
     sep = strtok(NULL, ",");
     strcpy(novoAl->nome, sep);
@@ -200,7 +186,7 @@ void listar(){
 
 int main() {
     inicializaHash();
-    FILE *arq = fopen("../alunos_completos.csv", "r");
+    FILE *arq = fopen("alunos_completos.csv", "r");
     int cont = 0;
 
     time_t inicio, fim;
@@ -232,12 +218,15 @@ int main() {
         insere(alunoLido, hash);
         cont++;
 
-        if (cont == 1) {
+        if (cont == 10000000000) {
             break;
         }
     }
-    
 
+    for (int i = 0; i > TAM; i++) {
+        ordena(i);
+    }
+    
     listar();
     // menu();
     fclose(arq);
@@ -247,6 +236,5 @@ int main() {
     tempo = fim - inicio;
     printf("Leitura: %d segs\n" , (int)tempo);
 
-    system("pause");
     return 0;
 }

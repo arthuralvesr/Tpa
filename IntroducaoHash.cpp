@@ -5,7 +5,7 @@
 #include <locale>
 #include <ctime>
 
-#define TAM 100
+#define TAM 100000
 
 //Matricula,CPF,Nome,Nota,Idade,Curso,Cidade
 //A0000000,915.216.859-08,Wallace Sampaio,20.35,23,Direito,Rio de Janeiro
@@ -192,7 +192,7 @@ void listar(){
 
 int main() {
     inicializaHash();
-    FILE *arq = fopen("../alunos_completos.csv", "r");
+    FILE *arq = fopen("alunos_completos.csv", "r");
     int cont = 0;
 
     time_t inicio, fim;
