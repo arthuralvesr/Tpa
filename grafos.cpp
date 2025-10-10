@@ -5,10 +5,13 @@
 #include <iostream>
 #include <time.h>
 #include <fstream>
+#include <string>
+#include <sstream>
+
 
 using namespace std;
 
-int direcionado(int tam) {
+int direcionado(int vertices) {
     int esc;
     int preenchimento;
 
@@ -20,9 +23,9 @@ int direcionado(int tam) {
     } while (esc != 1 && esc != 2);
 
     if (esc == 1) {
-        preenchimento = tam * (tam - 1); 
+        preenchimento = vertices * (vertices - 1); 
     } else {
-        preenchimento = (tam * (tam - 1)) / 2;
+        preenchimento = (vertices * (vertices - 1)) / 2;
     }
 
     return preenchimento;
@@ -44,10 +47,39 @@ void preencherMatriz(bool **matriz, int a, int t){
     }
 }
 
-void listar(bool **m, int t){
+bool conexidade(bool **m, int v) { // ta errado
+    bool *caminho = new bool[v];
 
-    for(int i = 0; i < t; i++) {
-        for(int j = 0; j < t; j++){
+    for(int i = 0; i < v; i++) {
+        caminho[i] = false;
+    }
+
+    for(int i = 0; i < v; i++) {
+        for(int j = 0; j < v; j++) {
+            if(caminho[i] == 1) {
+                continue;
+            }
+
+            if(m[i][j] == 1) {
+                caminho[i] = 1;
+                continue;
+            }
+        }
+    }
+
+    for(int i = 0; i < v; i++){
+        if(caminho[i] == 0){
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void listar(bool **m, int v){
+
+    for(int i = 0; i < v; i++) {
+        for(int j = 0; j < v; j++){
            cout << m[i][j] << " ";
         }
         cout << endl;
@@ -77,24 +109,24 @@ void criarArquivo(bool **m, int t, int a) {
 }
 
 void criarGrafo(){
-    int tam;
+    int vertices;
     int d;
     int arestas;
     int porcentagem;
     int maxDirecionado;
     
     cout << "Insira quantidade de vertices : ";
-    cin >> tam; 
+    cin >> vertices; 
     
-    bool **matriz = new bool*[tam];
+    bool **matriz = new bool*[vertices];
     
-    for(int i = 0; i < tam; i++) {
-        matriz[i] = new bool[tam];
+    for(int i = 0; i < vertices; i++) {
+        matriz[i] = new bool[vertices];
     }
     
-    // d = direcionado(tam);
+    // d = direcionado(vertices);
 
-    maxDirecionado = tam * (tam - 1);
+    maxDirecionado = vertices * (vertices - 1);
 
     cout << "Insira a porcentagem de arestas: ";
     cin >> porcentagem; 
@@ -105,30 +137,68 @@ void criarGrafo(){
 
     srand(time(NULL));
 
-    preencherMatriz(matriz, arestas, tam);
-    listar(matriz, tam);
-    criarArquivo(matriz, tam, arestas);
+    preencherMatriz(matriz, arestas, vertices);
+    listar(matriz, vertices);
+    criarArquivo(matriz, vertices, arestas);
+    
+    if (conexidade(matriz, vertices)){
+        cout << "O grafo gerado é conexo!\n";
+    } else {
+        cout << "O grafo gerado é desconexo!\n";
+    }
 }
 
-bool lerGrafo(){
-    ifstream arquivo("grafoLer.dot");
-    bool **matriz;
+void lerGrafo(){
+    ifstream arquivo;
+    string linha;
+    int vertices;
+
+
+    cout << "Insira quantidade de vertices : ";
+    cin >> vertices; 
+    
+    bool **matriz = new bool*[vertices];
+    
+    for(int i = 0; i < vertices; i++) {
+        matriz[i] = new bool[vertices];
+    }
+
+
+    arquivo.open("grafo.dot");
 
     if (!arquivo.is_open()) {
         cout << "falha na leitura";
     }
 
-    
+    while (getline(arquivo, linha)) {
+        if (linha.find("--") != string::npos) {
+            stringstream ss(linha);
+            int v1, v2;
+            char lixo; // para descartar os hífens
+
+            ss >> v1 >> lixo >> lixo >> v2; // lê "1 -- 0;" ignorando os '-'
+
+            matriz[v1][v2] = true;
+            matriz[v2][v1] = true;
+        } else {
+            continue;
+        }
+    }
 
     arquivo.close();
-    return matriz;
+    listar(matriz, vertices);
+    
+    if (conexidade(matriz, vertices)){
+        cout << "O grafo gerado é conexo!\n";
+    } else {
+        cout << "O grafo gerado é desconexo!\n";
+    }
 }
 
 
 void menu(){
     int op;
-    bool plotar;
-    
+        
     do {
         cout << "\tGrafos:\n\n";
         cout << "1 - Ler grafo\n";
@@ -138,7 +208,7 @@ void menu(){
 
     switch (op) {
     case 1:
-        plotar = lerGrafo();
+        lerGrafo();
         break;
     case 2:
         criarGrafo();
