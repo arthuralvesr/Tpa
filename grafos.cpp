@@ -49,26 +49,27 @@ void preencherMatriz(bool **matriz, int a, int t){
 
 bool conexidade(bool **m, int v) { // ta errado
     bool *caminho = new bool[v];
-
-    for(int i = 0; i < v; i++) {
+    
+    for(int i = 0; i < v; i++) { // deixa vetor de visita como falso
         caminho[i] = false;
     }
+    
+    caminho[0] = true;
 
-    for(int i = 0; i < v; i++) {
-        for(int j = 0; j < v; j++) {
-            if(caminho[i] == 1) {
-                continue;
-            }
-
-            if(m[i][j] == 1) {
-                caminho[i] = 1;
-                continue;
+    for(int i = 0; i < v; i++) { // verificação se já foi visitado
+        
+        if(caminho[i]){
+            for (int j = 0; j < v; j++){
+                
+                if (m[i][j] == true) {
+                    caminho[j] = true;
+                }            
             }
         }
     }
 
-    for(int i = 0; i < v; i++){
-        if(caminho[i] == 0){
+    for(int i = 0; i < v; i++){ // percorrer vetor
+        if(caminho[i] == false){
             return false;
         }
     }
@@ -203,8 +204,11 @@ void menu(){
         cout << "\tGrafos:\n\n";
         cout << "1 - Ler grafo\n";
         cout << "2 - Criar grafo\n";
+        cout << "3 - Sair\n";
+        cout << "Digite uma opcao: ";
         cin >> op;
-    } while (op != 1 && op != 2);
+
+    } while (op != 1 && op != 2 && op != 3);
 
     switch (op) {
     case 1:
@@ -212,6 +216,8 @@ void menu(){
         break;
     case 2:
         criarGrafo();
+    case 3: 
+        system("close");
     default:
         break;
     }
