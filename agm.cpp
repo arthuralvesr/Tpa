@@ -17,6 +17,7 @@ struct Vertice;
 struct Vizinho {
     Vertice *vizinho;
     Vizinho *proximoVizinho;
+    int peso;
 };
 
 struct Vertice {
@@ -25,6 +26,8 @@ struct Vertice {
 };
 
 Vertice *grafo;
+Vertice *grafoAgmPrim;
+
 
 void inicializa(int tamanho){
     grafo = new Vertice[tamanho];
@@ -35,7 +38,18 @@ void inicializa(int tamanho){
     }
 }
 
-void adicionaVizinho(Vertice *a, Vertice *b){
+Vertice* inicializaAgm(int vert) {
+    Vertice *grafoMinimo = new Vertice[vert];
+
+    for(int i = 0; i < vert; i++){
+        grafoMinimo[i].id = i;
+        grafoMinimo[i].vizinhos = NULL;
+    }
+
+    return grafoMinimo;
+}
+
+void adicionaVizinho(Vertice *a, Vertice *b, int peso){
 
     if (a == NULL || b == NULL)
         return;
@@ -47,6 +61,7 @@ void adicionaVizinho(Vertice *a, Vertice *b){
         temp->vizinho = b;
         temp->proximoVizinho = NULL;
         a->vizinhos = temp;
+        a->vizinhos->peso = peso;
             
     } else {
         Vizinho *aux;
@@ -61,6 +76,7 @@ void adicionaVizinho(Vertice *a, Vertice *b){
         temp->vizinho = b;
         temp->proximoVizinho = NULL;
         aux->proximoVizinho = temp;
+        aux->proximoVizinho->peso = peso;
     }
 
          
@@ -70,6 +86,7 @@ void adicionaVizinho(Vertice *a, Vertice *b){
         temp->vizinho = a;
         temp->proximoVizinho = NULL;
         b->vizinhos = temp;
+        b->vizinhos->peso = peso;
             
     } else {
         Vizinho *aux;
@@ -84,6 +101,7 @@ void adicionaVizinho(Vertice *a, Vertice *b){
         temp->vizinho = a;
         temp->proximoVizinho = NULL;
         aux->proximoVizinho = temp;
+        aux->proximoVizinho->peso = peso;
     }
 }
 
@@ -122,9 +140,39 @@ void possibilidades(int a, int v, int m){
     }
 
     for (int i = 0; i < a; i++) {
-        adicionaVizinho(&grafo[possibilidades[i].first], &grafo[possibilidades[i].second]);
+        int peso = rand() % 10;
+        adicionaVizinho(&grafo[possibilidades[i].first], &grafo[possibilidades[i].second], peso);
     }
 
+}
+
+void criarArquivoAGM(int vert, Vertice *grafoAGM) {
+    ofstream arquivo("grafoAGM.dot");
+    arquivo << "graph GrafoAGM {\n";
+    
+    for(int i = 0; i < vert; i++){
+        arquivo << "\t" << i << ";\n";
+    }
+
+    for(int i = 0; i < vert; i++) {
+        
+        Vizinho *aux = grafoAGM[i].vizinhos; 
+        
+        while (aux != NULL) {
+    
+            if (i < aux->vizinho->id) {
+                
+                arquivo << "\t" << i << " -- " << aux->vizinho->id << " [label=" << aux->peso << ", weight=" << aux->peso << "];\n"; 
+            }
+            
+            aux = aux->proximoVizinho;
+        }
+    }
+
+    arquivo << "}";
+    arquivo.close();
+
+    system("dot -Tpng grafoAGM.dot -o grafoAGM.png");
 }
 
 void criarArquivo(int a, int v) { 
@@ -141,7 +189,7 @@ void criarArquivo(int a, int v) {
         
         while (aux != NULL) {
             if(i > aux->vizinho->id) {
-                arquivo << "\t" << i << " -- " << aux->vizinho->id << ";\n";
+                arquivo << "\t" << i << " -- " << aux->vizinho->id << " [label=" << aux->peso << ", weight=" << aux->peso << "];\n";
             }
             
             aux = aux->proximoVizinho;
@@ -166,6 +214,52 @@ void listar(int v) {
         }
         cout << endl;
     }
+}
+
+void avmPrim(int vert) {
+    Vertice *grafoPrim = inicializaAgm(vert);
+
+    bool *caminho = new bool[vert];
+    
+    for(int i = 0; i < vert; i++) { // deixa vetor de visita como falso
+        caminho[i] = false;
+    }
+    
+    caminho[0] = true;
+
+    Vertice *vertOrigemVizinho;
+    Vertice *vertDestVizinho;
+    int menorVizinho;
+    int vertVisitados = 1;
+    
+    while(vertVisitados < vert) { // arvore geradora minima precisa de todos os vertices
+        menorVizinho = 11;
+        
+        for(int i = 0; i < vert; i++) { // encontro o menor vizinho de todos os verts já visitados
+            if(caminho[i]){
+                Vizinho *aux = grafo[i].vizinhos;
+
+                while(aux != NULL) {
+                    
+                    if(aux->peso < menorVizinho && caminho[aux->vizinho->id] == false){
+                        menorVizinho = aux->peso;
+                        
+                        vertOrigemVizinho = &grafo[i];
+                        vertDestVizinho = aux->vizinho;
+                    }
+                
+                    aux = aux->proximoVizinho;
+                }
+
+            }
+        }
+
+        caminho[vertDestVizinho->id] = true;
+        adicionaVizinho(&grafoPrim[vertOrigemVizinho->id], &grafoPrim[vertDestVizinho->id], menorVizinho);
+        vertVisitados++;
+    }
+
+    criarArquivoAGM(vert, grafoPrim);
 }
 
 void criarGrafo(){
@@ -195,8 +289,8 @@ void criarGrafo(){
 
     listar(vertices);
     criarArquivo(vertices, arestas);
+    avmPrim(vertices);
 }
-
 
 void menu(){
     int op;

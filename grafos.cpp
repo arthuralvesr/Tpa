@@ -11,9 +11,10 @@
 
 using namespace std;
 
-int direcionado(int vertices) {
+int direcionado(int vertices, int porcentagem) {
     int esc;
-    int preenchimento;
+    int max;
+    int arestas;
 
     do {
         cout << "1 - Direcionados\n";
@@ -23,12 +24,17 @@ int direcionado(int vertices) {
     } while (esc != 1 && esc != 2);
 
     if (esc == 1) {
-        preenchimento = vertices * (vertices - 1); 
+        max = vertices * (vertices - 1); 
+        arestas = (porcentagem / 100.0) * max;
+
     } else {
-        preenchimento = (vertices * (vertices - 1)) / 2;
+        max = (vertices * (vertices - 1)) / 2;
+        arestas = (porcentagem / 100.0) * max;
+
+
     }
 
-    return preenchimento;
+    return max;
 }
 
 void preencherMatriz(bool **matriz, int a, int t){
@@ -47,7 +53,8 @@ void preencherMatriz(bool **matriz, int a, int t){
     }
 }
 
-bool conexidade(bool **m, int v) { // ta errado
+void conexidade(bool **m, int v) { 
+    
     bool *caminho = new bool[v];
     
     for(int i = 0; i < v; i++) { // deixa vetor de visita como falso
@@ -70,7 +77,7 @@ bool conexidade(bool **m, int v) { // ta errado
 
     for(int i = 0; i < v; i++){ // percorrer vetor
         if(caminho[i] == false){
-            return false;
+            return;
         }
     }
 
@@ -125,16 +132,10 @@ void criarGrafo(){
         matriz[i] = new bool[vertices];
     }
     
-    // d = direcionado(vertices);
-
-    maxDirecionado = vertices * (vertices - 1);
-
     cout << "Insira a porcentagem de arestas: ";
     cin >> porcentagem; 
-
-    arestas = (porcentagem / 100.0) * maxDirecionado;
     
-    cout << arestas << "\n";
+    direcionado(vertices, porcentagem);
 
     srand(time(NULL));
 
