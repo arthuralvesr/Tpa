@@ -9,6 +9,7 @@
 #include <sstream>
 #include <vector>
 #include <utility>
+#include <algorithm>
 
 
 using namespace std;
@@ -27,7 +28,6 @@ struct Vertice {
 
 Vertice *grafo;
 Vertice *grafoAgmPrim;
-
 
 void inicializa(int tamanho){
     grafo = new Vertice[tamanho];
@@ -175,7 +175,7 @@ void criarArquivoAGM(int vert, Vertice *grafoAGM) {
     system("dot -Tpng grafoAGM.dot -o grafoAGM.png");
 }
 
-void criarArquivo(int a, int v) { 
+void criarArquivo(int v, int a) { 
     ofstream arquivo("grafo.dot");
     arquivo << "graph Grafo {\n";
     
@@ -183,7 +183,7 @@ void criarArquivo(int a, int v) {
         arquivo << "\t" << i << ";\n";
     }
 
-    for(int i = 0; i < a; i++) {
+    for(int i = 0; i < v; i++) {
         
         Vizinho *aux = grafo[i].vizinhos;
         
@@ -193,7 +193,7 @@ void criarArquivo(int a, int v) {
             }
             
             aux = aux->proximoVizinho;
-            }
+        }
     }
 
     arquivo << "}";
@@ -216,8 +216,59 @@ void listar(int v) {
     }
 }
 
-void avmPrim(int vert) {
-    Vertice *grafoPrim = inicializaAgm(vert);
+void listarArestas(int vert, ){
+    vector<tuple<int, Vertice, Vertice>> arestas;
+    
+
+    for (int i = 0; i < vert; i++) { // pega todas as arestas e coloca em um vetor
+        Vizinho *aux = grafo[i].vizinhos;
+        Vertice origem = grafo[i];
+
+        while (aux->vizinho != NULL) {
+            arestas.push_back(make_tuple(aux->peso, origem, *(aux->vizinho)));   
+            aux = aux->proximoVizinho;
+        }
+    }
+    
+    sort( // ordena as arestas da menor pra maior
+        arestas.begin(),
+        arestas.end(),
+        [](const auto &a, const auto &b) {
+            return get<0>(a) < get<0>(b);
+        }
+    );
+
+    vector<pair<int,Vertice>> subGrafos(vert);
+    
+    for (int i = 0; i < subGrafos.size(); i++) {
+        subGrafos[i].first = i;
+        subGrafos[i].second = grafo[i];
+    }
+    
+    
+    for (int i = 0; i < vert; i++) {
+        pair<int, Vertice> menor = subGrafos[i];
+
+        if (subGrafos[i].first =! menor.first) {
+
+            subGrafos[menor.first].first = subGrafos[i].first;
+
+            for (int i = 0; i < subGrafos.size(); i++) {
+
+                if (menor.first == subGrafos[i].first) {
+                    subGrafos[i].first = subGrafos[menor.first].first;
+                }
+            }
+
+            adicionaVizinho();
+        }
+    }
+}
+
+void agmKruskal(int vert) {
+    Vertice *grafoKruskal = inicializaAgm(vert);
+
+    listarArestas(vert, grafoKruskal);
 
     bool *caminho = new bool[vert];
     
@@ -255,11 +306,11 @@ void avmPrim(int vert) {
         }
 
         caminho[vertDestVizinho->id] = true;
-        adicionaVizinho(&grafoPrim[vertOrigemVizinho->id], &grafoPrim[vertDestVizinho->id], menorVizinho);
+        adicionaVizinho(&grafoKruskal[vertOrigemVizinho->id], &grafoKruskal[vertDestVizinho->id], menorVizinho);
         vertVisitados++;
     }
 
-    criarArquivoAGM(vert, grafoPrim);
+    criarArquivoAGM(vert, grafoKruskal);
 }
 
 void criarGrafo(){
@@ -289,14 +340,14 @@ void criarGrafo(){
 
     listar(vertices);
     criarArquivo(vertices, arestas);
-    avmPrim(vertices);
+    agmKruskal(vertices);
 }
 
 void menu(){
     int op;
         
     do {
-        cout << "\tGrafos:\n\n";
+        cout << "\tGrafos | AGM Kruskal:\n\n";
         cout << "1 - Ler grafo\n";
         cout << "2 - Criar grafo\n";
         cout << "3 - Sair\n";

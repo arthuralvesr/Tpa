@@ -4,6 +4,7 @@
         "ostream": "cpp",
         "new": "cpp",
         "fstream": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "tuple": "cpp"
     }
 }
