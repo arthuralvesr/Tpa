@@ -216,7 +216,7 @@ void listar(int v) {
     }
 }
 
-void listarArestas(int vert, ){
+void listarArestas(int vert){
     vector<tuple<int, Vertice, Vertice>> arestas;
     
 
@@ -241,15 +241,18 @@ void listarArestas(int vert, ){
     vector<pair<int,Vertice>> subGrafos(vert);
     
     for (int i = 0; i < subGrafos.size(); i++) {
-        subGrafos[i].first = i;
+        subGrafos[i].first = 0;
         subGrafos[i].second = grafo[i];
     }
     
-    
-    for (int i = 0; i < vert; i++) {
-        pair<int, Vertice> menor = subGrafos[i];
+    int contSubGrafo = 1;
 
-        if (subGrafos[i].first =! menor.first) {
+    for (int i = 0; i < vert; i++) {
+        tuple<int, Vertice, Vertice> menor = arestas[i];
+
+        subGrafos[menor.get<1>].first = contSubGrafo;
+
+        if (subGrafos[i].first =! menor.first || subGrafos[i].first == 0) {
 
             subGrafos[menor.first].first = subGrafos[i].first;
 
@@ -260,7 +263,7 @@ void listarArestas(int vert, ){
                 }
             }
 
-            adicionaVizinho();
+            adicionaVizinho(subGrafos[i].second, );
         }
     }
 }
@@ -268,7 +271,7 @@ void listarArestas(int vert, ){
 void agmKruskal(int vert) {
     Vertice *grafoKruskal = inicializaAgm(vert);
 
-    listarArestas(vert, grafoKruskal);
+    listarArestas(vert);
 
     bool *caminho = new bool[vert];
     
