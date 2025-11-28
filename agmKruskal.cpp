@@ -216,9 +216,10 @@ void listar(int v) {
     }
 }
 
-void listarArestas(int vert){
-    vector<tuple<int, Vertice, Vertice>> arestas;
-    
+void agmKruskal(int vert){
+    Vertice *grafoKruskal = inicializaAgm(vert);
+
+    vector<tuple<int, Vertice, Vertice>> arestas; // vetor com todos os vertices de origem e destino e peso
 
     for (int i = 0; i < vert; i++) { // pega todas as arestas e coloca em um vetor
         Vizinho *aux = grafo[i].vizinhos;
@@ -239,81 +240,37 @@ void listarArestas(int vert){
     );
 
     vector<pair<int,Vertice>> subGrafos(vert);
+    int contSubGrafo = 1;
     
     for (int i = 0; i < subGrafos.size(); i++) {
         subGrafos[i].first = 0;
         subGrafos[i].second = grafo[i];
     }
     
-    int contSubGrafo = 1;
+    subGrafos[0].first = contSubGrafo;
 
     for (int i = 0; i < vert; i++) {
         tuple<int, Vertice, Vertice> menor = arestas[i];
 
-        subGrafos[menor.get<1>].first = contSubGrafo;
+        if (subGrafos[get<1>(menor).id].first =! subGrafos[get<2>(menor).id].first) {
 
-        if (subGrafos[i].first =! menor.first || subGrafos[i].first == 0) {
+            if(subGrafos[get<2>(menor).id].first != 0) {
+                int guardarSubGrafo = subGrafos[get<2>(menor).id].first;
 
-            subGrafos[menor.first].first = subGrafos[i].first;
-
-            for (int i = 0; i < subGrafos.size(); i++) {
-
-                if (menor.first == subGrafos[i].first) {
-                    subGrafos[i].first = subGrafos[menor.first].first;
-                }
-            }
-
-            adicionaVizinho(subGrafos[i].second, );
-        }
-    }
-}
-
-void agmKruskal(int vert) {
-    Vertice *grafoKruskal = inicializaAgm(vert);
-
-    listarArestas(vert);
-
-    bool *caminho = new bool[vert];
-    
-    for(int i = 0; i < vert; i++) { // deixa vetor de visita como falso
-        caminho[i] = false;
-    }
-    
-    caminho[0] = true;
-
-    Vertice *vertOrigemVizinho;
-    Vertice *vertDestVizinho;
-    int menorVizinho;
-    int vertVisitados = 1;
-    
-    while(vertVisitados < vert) { // arvore geradora minima precisa de todos os vertices
-        menorVizinho = 11;
-        
-        for(int i = 0; i < vert; i++) { // encontro o menor vizinho de todos os verts já visitados
-            if(caminho[i]){
-                Vizinho *aux = grafo[i].vizinhos;
-
-                while(aux != NULL) {
+                for (int i = 0; i < subGrafos.size(); i++) {
                     
-                    if(aux->peso < menorVizinho && caminho[aux->vizinho->id] == false){
-                        menorVizinho = aux->peso;
+                    if (subGrafos[i].first == guardarSubGrafo) {
                         
-                        vertOrigemVizinho = &grafo[i];
-                        vertDestVizinho = aux->vizinho;
+                        subGrafos[i].first = subGrafos[get<1>(menor).id].first;       
                     }
-                
-                    aux = aux->proximoVizinho;
                 }
-
             }
+            
+            subGrafos[get<2>(menor).id].first = subGrafos[get<1>(menor).id].first;
+            
+            adicionaVizinho(&grafoKruskal[], &grafoKruskal[], );
         }
-
-        caminho[vertDestVizinho->id] = true;
-        adicionaVizinho(&grafoKruskal[vertOrigemVizinho->id], &grafoKruskal[vertDestVizinho->id], menorVizinho);
-        vertVisitados++;
     }
-
-    criarArquivoAGM(vert, grafoKruskal);
 }
 
 void criarGrafo(){
